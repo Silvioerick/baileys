@@ -25,4 +25,4 @@ jobs:
       - name: Run update script
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node update-baileys-version.mjs
+        run: node .github/script/update-baileys-version.mjs

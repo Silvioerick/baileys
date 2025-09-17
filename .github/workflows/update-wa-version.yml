@@ -19,10 +19,15 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install minimal deps
-        run: npm install --no-save axios cheerio octokit
+      - name: Prep isolated env + install minimal deps
+        run: |
+          mkdir -p .gha-tmp
+          cp .github/script/update-baileys-version.mjs .gha-tmp/
+          cd .gha-tmp
+          npm init -y >/dev/null 2>&1
+          npm install axios cheerio octokit --ignore-scripts --no-audit --no-fund
 
-      - name: Run update script
+      - name: Run update script (isolated)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node .github/script/update-baileys-version.mjs
+        run: node .gha-tmp/update-baileys-version.mjs

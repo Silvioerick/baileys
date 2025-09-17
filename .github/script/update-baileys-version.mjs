@@ -30,7 +30,7 @@ async function getThirdLatestVersion() {
     throw new Error("Menos de 3 versões encontradas.");
   }
 
-  return versions[2]; // terceira da lista
+  return versions[0]; // terceira da lista
 }
 
 async function updateVersionFile(octokit, versionArray) {

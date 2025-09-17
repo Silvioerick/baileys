@@ -2,8 +2,8 @@ name: Auto Update WA Version
 
 on:
   schedule:
-    - cron: "13 */6 * * *"  # A cada 6 horas
-  workflow_dispatch:        # Também pode rodar manual
+    - cron: "13 */6 * * *"
+  workflow_dispatch:
 
 jobs:
   update:
@@ -19,15 +19,17 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Prep isolated env + install minimal deps
+      - name: Install minimal deps (isolated)
         run: |
           mkdir -p .gha-tmp
-          cp .github/script/update-baileys-version.mjs .gha-tmp/
           cd .gha-tmp
           npm init -y >/dev/null 2>&1
-          npm install axios cheerio octokit --ignore-scripts --no-audit --no-fund
+          npm i axios cheerio octokit --ignore-scripts
 
-      - name: Run update script (isolated)
+      - name: Run update script
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node .gha-tmp/update-baileys-version.mjs
+        run: node -r ./.gha-tmp/node_modules/axios/index.js \
+                 -r ./.gha-tmp/node_modules/cheerio/index.js \
+                 -r ./.gha-tmp/node_modules/octokit/dist-node/index.js \
+                 .github/script/update-baileys-version.mjs

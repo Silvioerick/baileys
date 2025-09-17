@@ -19,8 +19,8 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install dependencies
-        run: npm install axios cheerio octokit
+      - name: Install minimal deps
+        run: npm install --no-save axios cheerio octokit
 
       - name: Run update script
         env:

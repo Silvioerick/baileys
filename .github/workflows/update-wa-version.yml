@@ -19,13 +19,6 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install minimal deps (isolated)
-        run: |
-          mkdir -p .gha-tmp
-          cd .gha-tmp
-          npm init -y >/dev/null 2>&1
-          npm i axios cheerio octokit --ignore-scripts
-
       - name: Run update script
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

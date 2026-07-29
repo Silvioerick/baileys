@@ -2,6 +2,7 @@ name: Auto Update WA Version
 
 on:
   schedule:
+    # A cada 6 horas — commits de heartbeat evitam o disable por inatividade (60 dias)
     - cron: "13 */6 * * *"
   workflow_dispatch:
 
@@ -12,10 +13,10 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
 

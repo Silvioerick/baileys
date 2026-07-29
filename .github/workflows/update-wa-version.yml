@@ -2,9 +2,13 @@ name: Auto Update WA Version
 
 on:
   schedule:
-    # A cada 6 horas — commits de heartbeat evitam o disable por inatividade (60 dias)
-    - cron: "13 */6 * * *"
+    # A cada 3 horas — heartbeat semanal evita o disable por inatividade (60 dias)
+    - cron: "13 */3 * * *"
   workflow_dispatch:
+
+concurrency:
+  group: update-wa-version
+  cancel-in-progress: true
 
 jobs:
   update:

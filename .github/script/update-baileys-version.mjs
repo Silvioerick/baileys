@@ -8,6 +8,7 @@ const REPO = "baileys";
 const BRANCH = "main";
 const FILE_PATH = "src/Defaults/baileys-version.json";
 const HEARTBEAT_PATH = ".github/wa-version-last-check.json";
+const HEARTBEAT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
 const GH_TOKEN = process.env.GITHUB_TOKEN;
 
 function getVersionArray(versionStr) {
@@ -17,7 +18,14 @@ function getVersionArray(versionStr) {
 }
 
 async function getLatestVersion() {
-  const res = await axios.get(PAGE_URL, { timeout: 15000 });
+  const res = await axios.get(PAGE_URL, {
+    timeout: 15000,
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (compatible; BaileysVersionBot/1.0; +https://github.com/Silvioerick/baileys)",
+      Accept: "text/html,application/xhtml+xml",
+    },
+  });
   const $ = cheerio.load(res.data);
 
   const versions = [];
@@ -88,8 +96,31 @@ async function updateVersionFile(octokit, versionArray) {
   return true;
 }
 
-async function writeHeartbeat(octokit, versionArray) {
+function shouldWriteHeartbeat(existing) {
+  if (!existing) return true;
+
+  try {
+    const current = JSON.parse(Buffer.from(existing.content, "base64").toString("utf-8"));
+    const checkedAt = Date.parse(current.checkedAt);
+    if (Number.isNaN(checkedAt)) return true;
+    return Date.now() - checkedAt >= HEARTBEAT_MAX_AGE_MS;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Heartbeat semanal: sem commits periódicos o GitHub desativa
+ * workflows schedule após 60 dias de inatividade no repositório.
+ */
+async function writeHeartbeatIfNeeded(octokit, versionArray) {
   const existing = await getFile(octokit, HEARTBEAT_PATH);
+
+  if (!shouldWriteHeartbeat(existing)) {
+    console.log("Heartbeat ainda fresco (< 7 dias); pulando.");
+    return;
+  }
+
   const payload = {
     checkedAt: new Date().toISOString(),
     version: versionArray,
@@ -114,9 +145,9 @@ async function writeHeartbeat(octokit, versionArray) {
 
   const versionUpdated = await updateVersionFile(octokit, versionArray);
 
-  // Só grava heartbeat quando não houve update de versão — o commit de versão
-  // já conta como atividade; sem commits o GitHub desativa o schedule em 60 dias.
+  // Só considera heartbeat quando não houve update de versão —
+  // o commit de versão já conta como atividade.
   if (!versionUpdated) {
-    await writeHeartbeat(octokit, versionArray);
+    await writeHeartbeatIfNeeded(octokit, versionArray);
   }
 })();
